@@ -1,0 +1,249 @@
+:root {
+    --bg-main: #f4f4f4;
+    --bg-white: #FFFFFF;
+    --bg-black: #0E0E0E;
+    --text-color-white: #FFFFFF;
+    --text-color-white-grey: #FFFFFF99;
+    --text-color-black: #0E0E0E;
+    --text-color-black-grey: #0E0E0E99;
+    --border-color-grey: #0e0e0e0d;
+    --font-large: 60px;
+    --font-medium: 40px;
+    --font-regular: 18px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    background-color: var(--bg-main);
+    font-family: Inter, Inter Placeholder, sans-serif;
+    display: flex;
+    flex-direction: column;
+    row-gap: 50px;
+    padding: 0 20px;
+}
+
+.wrapper {
+    width: clamp(720px, 100%, 1400px);
+    /* min-width: 720px;
+    max-width: 1400px;
+    width: 100%; */
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    margin: auto;
+}
+
+header {
+    width: 100%;
+    background-color: var(--bg-main);
+    border-bottom: 1px solid var(--border-color-grey);
+    height: 80px;
+    padding: 20px 0;
+}
+
+header .wrapper {
+    height: 100%;
+}
+
+header img {
+    height: 100%;
+}
+
+header .menu {
+    width: 600px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    font-size: var(--font-regular);
+    column-gap: 25px;
+}
+
+header .menu .item {
+    position: relative;
+    cursor: pointer;
+    text-transform: capitalize;
+}
+
+header .menu .item.uppercase {
+    text-transform: uppercase;
+}
+
+header .menu .item::before {
+    content: '[';
+    position: absolute;
+    top: 0;
+    left: -15px;
+    /* margin-right: 15px; */
+    transition: 0.3s;
+}
+
+header .menu .item::after {
+    content: ']';
+    position: absolute;
+    top: 0;
+    right: -15px;
+    /* margin-left: 15px; */
+    /* transition: left 0.3s, right 2.9s; */
+    transition: 0.9s;
+}
+
+header .menu .item:hover::before {
+    left: -0.5ch;
+}
+
+header .menu .item:hover::after {
+    right: -0.5ch;
+}
+
+header .menu .button {
+    padding: 16px 20px;
+    background-color: var(--bg-black);
+    color: var(--text-color-white);
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+header .menu .button .a {
+    height: var(--font-regular);
+    overflow: hidden;
+}
+
+header .menu .button .a div {
+    transition: 0.4s;
+}
+
+header .menu .button:hover .a div {
+    transform: translateY(-20px);
+}
+
+.logo {
+    animation-name: logo-start;
+    animation-duration: 1.5s;
+    animation-fill-mode: both;
+}
+
+@keyframes logo-start {
+    0% {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    /* 40% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    45% {
+        transform: translateX(50px);
+        opacity: 1;
+    }
+
+    55% {
+        transform: translateX(-50px);
+        opacity: 1;
+    }
+
+    65% {
+        transform: translateX(50px);
+        opacity: 1;
+    }
+
+    75% {
+        transform: translateX(-50px);
+        opacity: 1;
+    }
+
+    85% {
+        transform: translateX(50px);
+        opacity: 1;
+    }
+
+    95% {
+        transform: translateX(-50px);
+        opacity: 1;
+    } */
+
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.item {
+    animation: menu-start 0.7s both;
+    animation-delay: var(--delay);
+}
+
+@keyframes menu-start {
+    0% {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+
+.menu .button {
+    animation: button-heart 2.4s both;
+    animation-iteration-count: infinite;
+}
+@keyframes button-heart {
+    0% {
+        transform: scale(0.9);
+    }
+
+    30% {
+        transform: scale(1.1);
+    }
+
+    50% {
+        transform: scale(0.9);
+    }
+
+    70% {
+        transform: scale(1.1);
+    }
+
+    90% {
+        transform: scale(0.9);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.container_1 .wrapper {
+    height: 800px;
+}
+
+.container_2 {
+    padding-top: 30px;
+    width: 100%;
+    height: auto;
+    background-color: var(--bg-main);
+}
+
+.container_3 {
+    height: 100vh;
+}
+
+.container_3 .wrapper {
+    background-color: var(--bg-black);
+    color: var(--text-color-white);
+    padding: 16px 24px;
+    border-radius: 16px;
+    height: 100%;
+}
