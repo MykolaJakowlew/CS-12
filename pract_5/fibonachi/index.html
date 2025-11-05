@@ -1,0 +1,76 @@
+<style>
+    .limit {
+        font-size: 1.8em;
+        color: grey;
+    }
+
+    .anim {
+        width: 64px;
+        aspect-ratio: 1/1;
+        background-color: blue;
+        animation: anim 1s infinite;
+        border-radius: 50%;
+        margin: 50px;
+    }
+
+    @keyframes anim {
+
+        0%,
+        100% {
+            transform: scale(1.0);
+        }
+
+        40% {
+            transform: scale(1.2);
+        }
+
+        80% {
+            transform: scale(0.8);
+        }
+    }
+</style>
+<div>
+    <input type="number" min="1" placeholder="Number">
+    <button>generate</button>
+    <div class="limit">Limit: 1000</div>
+</div>
+Result: <span id="result"></span>
+
+<div>
+    <span id="clicker"></span>
+    <button id="click">click</button>
+</div>
+
+<div class="anim"></div>
+<script>
+
+    const input = document.querySelector('input')
+
+    // async function F() {}
+
+    const fibo = async (num) => {
+        if (num == 1 || num == 2) {
+            return 1
+        }
+        // console.log(`execute with num${num}`)
+
+        return (await fibo(num - 1)) + (await fibo(num - 2))
+        // return await (fibo(num - 1) + fibo(num - 2)) // error 
+    }
+
+    const btn = document.querySelector('button')
+    btn.addEventListener('click', async () => {
+        const number = parseInt(input.value, 10)
+
+        const result = await fibo(number)
+
+        document.querySelector('#result').textContent = result
+    })
+
+    document.querySelector('#click')
+        .addEventListener('click', () => {
+            const value = +document.querySelector('#clicker').textContent
+            document.querySelector('#clicker').textContent = value + 1
+        })
+
+</script>
