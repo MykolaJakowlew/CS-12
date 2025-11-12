@@ -1,3 +1,42 @@
+// [
+//  { id: 1, name, shortDescription, ... },
+//  { id: 1, name, shortDescription, ... },
+//  { id: 2, name, shortDescription, ... },
+//  { id: 2, name, shortDescription, ... },
+// ]
+
+// [
+//  { id: 1, name, shortDescription, ..., count: 1 },
+//  { id: 2, name, shortDescription, ..., count: 2 },
+// ]
+const cart = []
+
+const addCart = (item) => {
+    const cartCounter = document.querySelector('#cart-counter')
+    const existedItem = cart.find(el => el.id == item.id)
+    if (existedItem) {
+        existedItem.count += 1
+    } else {
+        cart.push({ ...item, count: 1 });
+    }
+    cartCounter.classList.remove('hide')
+
+    // let sum = 0;
+    // for (const el of cart) {
+    //     sum += el.count
+    // }
+
+    const sum = cart.reduce((acc, cur) => {
+        return acc + cur.count;
+    }, 0)
+
+    if (sum > 9) {
+        cartCounter.textContent = "+9"
+    } else {
+        cartCounter.textContent = sum
+    }
+}
+
 const createItem = (item) => {
     //  <div class="item"></div>
     const div = document.createElement('div')
@@ -41,6 +80,23 @@ const createItem = (item) => {
     const add = document.createElement('div')
     add.classList.add('item-add')
     add.textContent = `Add to cart`
+    add.addEventListener('click', () => {
+
+        // item.availableCount = item.availableCount - 1
+        // item.availableCount--;
+        if (item.availableCount == 0) {
+            return;
+        }
+
+        addCart(item)
+
+        item.availableCount -= 1
+        availableCount.textContent = `Count: ${item.availableCount}`
+
+        if (item.availableCount == 0) {
+            add.classList.add('disabled')
+        }
+    })
 
     bottom.append(rating)
     bottom.append(availableCount)
@@ -62,20 +118,20 @@ const setCategoryValues = (data) => {
     //     if (allCategories.includes(el)) {
     //         return null;
     //     }
-
     //     return el.category
     // }).filter(el => el != null)
 
-    // [ 'c1', 'c2', 'c1', 'c3' ]
+    // allCategories => [ 'c1', 'c2', 'c1', 'c3' ]
     const allCategories = data.map(el => el.category)
 
-    // {
+    // allCategoriesSet => {
     //    c1: 1,
     //    c2: 1,
     //    c3: 1,
     //    ...
     // }
     const allCategoriesSet = new Set(allCategories)
+    // uniqueCategories => [ 'c1', 'c2', 'c3' ]
     const uniqueCategories = [...allCategoriesSet]
 
     const categoryNode = document.querySelector('.category select')
@@ -114,9 +170,7 @@ const setExtraFunctions = (data) => {
     //   ...
     // ]
     const allExtraFunctions = data.flatMap(el => el.extraFunctions)
-    const uniqueExtraFunctions = [
-        ...new Set(allExtraFunctions)
-    ]
+    const uniqueExtraFunctions = [...new Set(allExtraFunctions)]
 
     const container = document.querySelector('.extra-functions-container')
 
@@ -136,7 +190,214 @@ const setExtraFunctions = (data) => {
     })
 }
 
+const getAllSelectedExtraFunctions = () => {
+    const selectedCheckbox = document.querySelectorAll(
+        '.extra-functions-container input[type="checkbox"]:checked'
+    )
+    const extraFunctions = []
+    selectedCheckbox.forEach(checkbox => {
+        extraFunctions.push(
+            checkbox.getAttribute('data')
+        )
+    })
+    return extraFunctions
+}
+
+const filterItems = (data, params) => {
+    const {
+        searchText,
+        priceMin,
+        priceMax,
+        category,
+        rating,
+        extraFunctions
+    } = params;
+
+    data.forEach(el => {
+        const item = document.querySelector(`.item[item-id="${el.id}"]`);
+
+        if (searchText.length) {
+            const isTextInName = el.name.toLowerCase()
+                .indexOf(searchText.toLowerCase()) !== -1
+            const isTextInShorDescription = el.shortDescription.toLowerCase()
+                .indexOf(searchText.toLowerCase()) !== -1
+            if (!isTextInName && !isTextInShorDescription) {
+                // el => add hide
+                item.classList.add('hide');
+                return;
+            }
+        }
+
+        // if (priceMin >= 0) {
+        //     if (el.price < priceMin) {
+        //         // el => add hide
+        //         item.classList.add('hide');
+        //         return;
+        //     }
+        // }
+
+        if (priceMin >= 0 && el.price < priceMin) {
+            // el => add hide
+            item.classList.add('hide');
+            return;
+        }
+
+        if (priceMax >= 0 && el.price > priceMax) {
+            // el => add hide
+            item.classList.add('hide');
+            return;
+        }
+
+        if (extraFunctions && extraFunctions.length) {
+            const result = extraFunctions
+                .every(extra => el.extraFunctions.includes(extra))
+            if (!result) {
+                // el => add hide
+                item.classList.add('hide');
+                return;
+            }
+        }
+
+
+        item.classList.remove('hide');
+    })
+}
+
+const setupFilters = (data) => {
+    const searchInput = document.querySelector('#search-input')
+    const priceMinInput = document.querySelector('#price-min')
+    const priceMaxInput = document.querySelector('#price-max')
+
+    searchInput.addEventListener('keyup', (event) => {
+        const text = event.target.value.trim().toLowerCase()
+        filterItems(data, {
+            searchText: text,
+            priceMin: parseInt(priceMinInput.value),
+            priceMax: parseInt(priceMaxInput.value),
+            extraFunctions: getAllSelectedExtraFunctions()
+        })
+
+    })
+
+    priceMinInput.addEventListener('keyup', (event) => {
+        filterItems(data, {
+            searchText: searchInput.value.trim().toLowerCase(),
+            priceMin: parseInt(event.target.value),
+            priceMax: parseInt(priceMaxInput.value),
+            extraFunctions: getAllSelectedExtraFunctions()
+        })
+    })
+
+    priceMaxInput.addEventListener('keyup', (event) => {
+        filterItems(data, {
+            searchText: searchInput.value.trim().toLowerCase(),
+            priceMin: parseInt(priceMinInput.value),
+            priceMax: parseInt(event.target.value),
+            extraFunctions: getAllSelectedExtraFunctions()
+        })
+    })
+
+    document.querySelectorAll(
+        '.extra-functions-container input[type="checkbox"]'
+    ).forEach(checkboxInput => {
+        checkboxInput.addEventListener(
+            'change',
+            () => {
+                const extraFunctions = getAllSelectedExtraFunctions()
+                filterItems(data, {
+                    searchText: searchInput.value.trim(),
+                    priceMin: parseInt(priceMinInput.value),
+                    priceMax: parseInt(priceMaxInput.value),
+                    extraFunctions,
+                })
+            }
+        )
+    })
+}
+
+const updateItemAvailabeCount = (id, count) => {
+    document.querySelector(
+        `.item[item-id="${id}"] .item-available-count`
+    ).textContent = `Count: ${count}`
+}
+
+const createViewItem = (item, data) => {
+    const cartViewItem = document.createElement('div')
+    cartViewItem.classList.add('cart-view-item')
+
+    const cartViewItemImage = document.createElement('div')
+    cartViewItemImage.classList.add('image')
+    cartViewItemImage.style = `--bgImg: url('${item.imageUrl}')`
+
+    const cartViewItemName = document.createElement('div')
+    cartViewItemName.classList.add('name')
+    cartViewItemName.textContent = item.name
+
+    const cartViewItemPrice = document.createElement('div')
+    cartViewItemPrice.classList.add('price')
+    cartViewItemPrice.textContent = item.price
+
+    const itemCount = item.count
+    const cartViewItemCount = document.createElement('div')
+    cartViewItemCount.classList.add('count')
+    const cartViewItemCountDec = document.createElement('div')
+    cartViewItemCountDec.classList.add('decrease-count')
+    cartViewItemCountDec.textContent = "-"
+    const cartViewItemCountValue = document.createElement('div')
+    cartViewItemCountValue.classList.add('count-value')
+    cartViewItemCountValue.textContent = itemCount
+    const cartViewItemCountInc = document.createElement('div')
+    cartViewItemCountInc.classList.add('increase-count')
+    cartViewItemCountInc.textContent = "+"
+    cartViewItemCount.append(
+        cartViewItemCountDec,
+        cartViewItemCountValue,
+        cartViewItemCountInc
+    )
+
+    const cartViewItemTotalItemPrice = document.createElement('div')
+    cartViewItemTotalItemPrice.classList.add("total-item-price")
+    cartViewItemTotalItemPrice.textContent = (itemCount * item.price).toFixed(2)
+
+    const cartViewItemRemoveItem = document.createElement('div')
+    cartViewItemRemoveItem.classList.add('remove-item')
+    const cartViewItemRemoveItemImg = document.createElement('img')
+    cartViewItemRemoveItemImg.src = "./imgs/delete.png"
+    cartViewItemRemoveItemImg.addEventListener('click', () => {
+        const index = cart.findIndex(el => el.id === item.id)
+        cart.splice(index, 1)
+        setTotalPrice()
+        // item.availableCount += item.count
+        const renderItem = data.find(el => el.id === item.id)
+        renderItem.availableCount += item.count;
+        updateItemAvailabeCount(item.id, renderItem.availableCount)
+        cartViewItem.remove()
+    })
+    cartViewItemRemoveItem.appendChild(cartViewItemRemoveItemImg)
+
+    cartViewItem.append(
+        cartViewItemImage,
+        cartViewItemName,
+        cartViewItemPrice,
+        cartViewItemCount,
+        cartViewItemTotalItemPrice,
+        cartViewItemRemoveItem,
+    )
+    return cartViewItem
+}
+
+const setTotalPrice = () => {
+    let totalPrice = 0
+    for (const el of cart) {
+        totalPrice += el.count * el.price
+    }
+
+    document.querySelector('#total-price-value')
+        .textContent = totalPrice.toFixed(2)
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+
     const response = await fetch('./electronic_items_dataset.json')
     const data = await response.json()
     const items = document.querySelector('.items')
@@ -148,239 +409,49 @@ document.addEventListener('DOMContentLoaded', async () => {
     setCategoryValues(data)
     setExtraFunctions(data)
 
-    // const filterItems = (text, priceMin, priceMax, rarting, category) => { /* ... */ }
-    // const filterItems = (params) => { 
-    //     const { text, priceMin, priceMax, rarting, category } = params
-    // }
+    setupFilters(data)
 
-    const filterItems = (params) => {
-        const { text, price: { min, max }, rating, category, extraFuncions } = params
+    const cartViewWrapper = document.querySelector('.cart-view-wrapper')
+    const cartViewList = document.querySelector('.cart-view-list')
 
-        data.forEach(el => {
-            const id = el.id
-            const item = document.querySelector(`.item[item-id="${id}"]`)
-            if (!item) {
-                return;
-            }
-
-            const conditions = []
-
-            if (text.length) {
-                const name = el.name.toLowerCase()
-                const shortDescription = el.shortDescription.toLowerCase()
-                // if (name.indexOf(text) !== -1) {
-                //     conditions.push(true)
-                // } else if (shortDescription.indexOf(text) !== -1) {
-                //     conditions.push(true)
-                // } else {
-                //     conditions.push(false)
-                // }
-
-                // if (name.indexOf(text) !== -1 || shortDescription.indexOf(text) !== -1) {
-                //     conditions.push(true)
-                // } else {
-                //     conditions.push(false)
-                // }
-
-                conditions.push(
-                    name.indexOf(text) !== -1 || shortDescription.indexOf(text) !== -1
-                )
-            }
-
-            if (min >= 0 && max >= 0) {
-                // const price = el.price
-                const { price } = el
-                conditions.push(price >= min && price <= max)
-            } else if (max >= 0) {
-                // const price = el.price
-                const { price } = el
-                conditions.push(price <= max)
-            } else if (min >= 0) {
-                // const price = el.price
-                const { price } = el
-                conditions.push(price <= min)
-            }
-
-            if (extraFuncions.length) {
-                conditions.push(
-                    extraFuncions.every(extra => el.extraFunctions.includes(extra))
-                )
-            }
-
-            if (conditions.length === 0) {
-                document.querySelectorAll('.item.hide')
-                    .forEach(el => el.classList.remove('hide'))
-                return
-            }
-
-            if (conditions.some(el => el === false)) {
-                item.classList.add('hide')
-            } else {
-                item.classList.remove('hide')
-            }
-        })
+    const closeCart = () => {
+        cartViewWrapper.classList.add('hide')
     }
 
-    const searchInput = document.querySelector('#search-input')
-    const priceMinInput = document.querySelector('#price-min')
-    const priceMaxInput = document.querySelector('#price-max')
-    const extraFunctionCheckboxes = document.querySelectorAll(
-        '.extra-functions-container input[type="checkbox"]'
-    )
+    const openCart = () => {
+        cartViewWrapper.classList.remove('hide')
+    }
 
-    extraFunctionCheckboxes.forEach(el => {
-        el.addEventListener('change', () => {
-            const text = searchInput.value.trim().toLowerCase()
-            const priceMin = parseInt(priceMinInput.value)
-            const priceMax = parseInt(priceMaxInput.value)
-            filterItems({
-                text,
-                extraFuncions: getExtraFunctions(),
-                price: { min: priceMin, max: priceMax }
+    document.querySelector('.blur')
+        .addEventListener('click', () => {
+            closeCart()
+        })
+
+    document.querySelector('#cart-view-close')
+        .addEventListener('click', () => {
+            closeCart()
+        })
+
+    document.querySelector('.cart > div')
+        .addEventListener('click', () => {
+            // Option A
+            cartViewList.innerHTML = ''
+            // Option B
+            // document.querySelectorAll('.cart-view-item')
+            //     .forEach(elem => elem.remove())
+
+            const cartViewItems = cart.map(item => {
+                return createViewItem(item, data)
             })
-        })
-    })
+            cartViewList.append(...cartViewItems)
 
-    const getExtraFunctions = () => {
-        const selectedFunctions = []
-        extraFunctionCheckboxes.forEach(el => {
-            if (el.checked) {
-                selectedFunctions.push(el.getAttribute('data'))
-            }
+            setTotalPrice()
+
+            openCart()
         })
 
-        return selectedFunctions
-    }
-
-    searchInput.addEventListener('keyup', (event) => {
-        const text = event.target.value.trim().toLowerCase()
-        const priceMin = parseInt(priceMinInput.value)
-        const priceMax = parseInt(priceMaxInput.value)
-        filterItems({
-            text,
-            extraFuncions: getExtraFunctions(),
-            price: { min: priceMin, max: priceMax }
-        })
-    })
-    priceMinInput.addEventListener('keyup', (event) => {
-
-        const text = searchInput.value.trim().toLowerCase()
-        const priceMin = parseInt(event.target.value)
-        const priceMax = parseInt(priceMaxInput.value)
-        filterItems({
-            text,
-            price: { min: priceMin, max: priceMax },
-            extraFuncions: getExtraFunctions(),
-        })
-    })
-    priceMaxInput.addEventListener('keyup', (event) => {
-        const text = searchInput.value.trim().toLowerCase()
-        const priceMin = parseInt(priceMinInput.value)
-        const priceMax = parseInt(event.target.value)
-        filterItems({
-            extraFuncions: getExtraFunctions(),
-            text,
-            price: { min: priceMin, max: priceMax }
-        })
-    })
-
-
-
-
-    // document.querySelector('#search-input').addEventListener(
-    //     'keyup', (event) => {
-    //         const text = event.target.value.trim().toLowerCase()
-    //         if (text.length === 0) {
-    //             document.querySelectorAll('.item.hide')
-    //                 .forEach(el => el.classList.remove('hide'))
-    //             return;
-    //         }
-
-    //         data.forEach(el => {
-    //             // /// Option 1
-    //             // {
-    //             //     const name = el.name.toLowerCase()
-    //             //     if (name.indexOf(text) !== -1) {
-    //             //         // elem => remove .hide
-    //             //     } else {
-    //             //         // elem => add .hide
-    //             //     }
-    //             //     const shortDescription = el.shortDescription.toLowerCase()
-    //             //     if (shortDescription.indexOf(text) !== -1) {
-    //             //         // elem => remove .hide
-    //             //     } else {
-    //             //         // elem => add .hide
-    //             //     }
-    //             // }
-    //             // /// Option 2
-    //             // {
-    //             //     const name = el.name.toLowerCase()
-    //             //     const shortDescription = el.shortDescription.toLowerCase()
-    //             //     if (name.indexOf(text) !== -1 || shortDescription.indexOf(text) !== -1) {
-    //             //         // elem => remove .hide
-    //             //     } else {
-    //             //         // elem => add .hide
-    //             //     }
-    //             // }
-
-    //             // Option 3
-    //             const id = el.id
-    //             const item = document.querySelector(`.item[item-id="${id}"]`)
-    //             if (!item) {
-    //                 return;
-    //             }
-    //             const name = el.name.toLowerCase()
-    //             if (name.indexOf(text) !== -1) {
-    //                 // elem => remove .hide
-    //                 item.classList.remove('hide')
-    //                 return;
-    //             }
-
-    //             const shortDescription = el.shortDescription.toLowerCase()
-    //             if (shortDescription.indexOf(text) !== -1) {
-    //                 // elem => remove .hide
-    //                 item.classList.remove('hide')
-    //                 return;
-    //             }
-    //             // elem => add .hide
-    //             item.classList.add('hide')
-    //         })
-    //     }
-    // )
-    // // price-max
-    // document.querySelector('#price-min').addEventListener(
-    //     'keyup',
-    //     (event) => {
-    //         // const priceMin = +event.target.value
-    //         const priceMin = parseInt(event.target.value)
-
-    //         // is not a number
-    //         if (isNaN(priceMin)) {
-    //             return;
-    //         }
-
-    //         data.forEach(el => {
-    //             const id = el.id
-    //             const item = document.querySelector(`.item[item-id="${id}"]`)
-    //             if (!item) {
-    //                 return;
-    //             }
-
-    //             // const price = el.price
-    //             const { price } = el
-
-    //             if (price >= priceMin) {
-    //                 // elem => remove .hide
-    //                 item.classList.remove('hide')
-    //                 return;
-    //             }
-
-    //             // elem => add .hide
-    //             item.classList.add('hide')
-    //         })
-    //     }
-    // )
-
+    // setTimeout(() => {
     document.querySelector('.loader')
         .classList.add('hide')
+    // }, 2500)
 })
